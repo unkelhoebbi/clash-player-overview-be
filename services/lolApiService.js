@@ -1,6 +1,8 @@
+require('dotenv').config()
+
 let fetch = require('node-fetch');
 const headers = {
-    'X-Riot-Token': 'RGAPI-18cf4919-5815-4961-83b9-59432923fbd6'
+    'X-Riot-Token': process.env.API_KEY
 };
 
 const baseUrlEurope = 'https://europe.api.riotgames.com/lol'
@@ -14,8 +16,18 @@ async function getMatchHistory(name) {
     let route = `/match/v5/matches/by-puuid/${puuid}/ids`;
 
     let response = await fetch(`${baseUrlEurope}${route}`,{ method: 'GET', headers: headers});
+    let content = await response.json();
 
-    return response.json();
+    let matches = await Promise.all(content.map( async function (matchId) {
+        let route = `/match/v5/matches/${matchId}`;
+        let match = await fetch(`${baseUrlEurope}${route}`,{ method: 'GET', headers: headers});
+        let match_content = await match.json();
+        return match_content;
+    }));
+
+    console.log(matches);
+
+    return matches
 
 }
 
